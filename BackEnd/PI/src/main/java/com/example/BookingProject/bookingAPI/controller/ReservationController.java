@@ -1,6 +1,5 @@
 package com.example.BookingProject.bookingAPI.controller;
 
-import com.example.BookingProject.bookingAPI.persistence.model.Image;
 import com.example.BookingProject.bookingAPI.persistence.model.Reservation;
 import com.example.BookingProject.bookingAPI.persistence.repository.ReservationRepository;
 import com.example.BookingProject.bookingAPI.service.ReservationService;
@@ -12,11 +11,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("reservation")
+@RequestMapping("api/reservation")
 public class ReservationController {
 
     @Autowired
     ReservationService reservationService;
+
+    @Autowired
+    ReservationRepository reservationRepository;
 
 
     @PostMapping
@@ -50,6 +52,14 @@ public class ReservationController {
         return new ResponseEntity<>(reservationService.updateReservation(reservation), HttpStatus.OK);
     }
 
+    @GetMapping("/findProduct/{id}")
+    public ResponseEntity<?> getReservationsByProductId(@PathVariable Long id){
+        return new ResponseEntity<>(reservationRepository.getReservationsByProductId(id), HttpStatus.OK);
+    }
 
+    @GetMapping("/userReservation/{id}")
+    public ResponseEntity<?> getReservationsByUserId(@PathVariable Long id){
+        return new ResponseEntity<>(reservationRepository.getReservationsByUserId(id), HttpStatus.OK);
+    }
 
 }

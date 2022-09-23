@@ -1,11 +1,9 @@
 package com.example.BookingProject.bookingAPI.controller;
 
 import com.example.BookingProject.bookingAPI.persistence.model.Product;
-import com.example.BookingProject.bookingAPI.persistence.model.Reservation;
 import com.example.BookingProject.bookingAPI.persistence.repository.ProductRepository;
 import com.example.BookingProject.bookingAPI.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +26,26 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<?> addProduct(@RequestBody Product product){
+        if (productService.findByProductTitle(product.getTitle()).isPresent()) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
         return new ResponseEntity<>(productService.saveProduct(product), HttpStatus.CREATED);
     }
+
 
     @GetMapping
     public ResponseEntity<?> findAllProducts() {
         return new ResponseEntity<>(productService.getAllProducts(),HttpStatus.OK);
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/{id}")
     public Product getProductById(@PathVariable Long id){
         return productService.getProductById(id);
+    }
+
+    @PutMapping
+    public ResponseEntity<?> update(@RequestBody Product product) {
+        return new ResponseEntity<>(productService.updateProduct(product),HttpStatus.OK);
     }
 
 
@@ -59,6 +66,8 @@ public class ProductController {
         return productRepository.findByCityCode(cityCode);
 
     }
+
+
      /*       Encontrar por categoria       */
 
     @GetMapping("/productCategory/name/{category}")
@@ -86,16 +95,13 @@ public class ProductController {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date checkInD = formatter.parse(checkIn);
         Date checkOutD = formatter.parse(checkOut);
-        System.out.println("hasta aquí");
         try {
-            System.out.println("entró");
             return productRepository.findByRangeOfDates(checkInD, checkOutD);
         } catch (Exception e){
             System.out.println(e);
             return null;
         }
     }
-
 
 
     /*         Encontrar por rango de fechas y ciudad       */

@@ -1,7 +1,5 @@
 package com.example.BookingProject.bookingAPI.persistence.model;
 
-
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +20,9 @@ public class Image {
 
     @Column(name = "title")
     private String title;
+
+    @Column(name = "main_img")
+    private String main_img;
 
     @Column(name = "image_url")
     private String imageURL;

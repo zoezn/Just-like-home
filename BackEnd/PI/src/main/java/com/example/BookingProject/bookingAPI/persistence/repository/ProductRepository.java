@@ -1,6 +1,7 @@
 package com.example.BookingProject.bookingAPI.persistence.repository;
 
 import com.example.BookingProject.bookingAPI.persistence.model.Product;
+import com.example.BookingProject.bookingAPI.persistence.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.jpa.repository.Query;
@@ -10,9 +11,12 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    Optional<Product> findByTitle(String title);
 
     // FIND BY CITY TITLE, ID AND CODE
 
@@ -40,34 +44,29 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     // FIND BY RANGE OF DATES AND CITY
 
-   @Query(value = "SELECT  a.check_in, a.check_out, a.id, a.availability, a.description, a.description_title, a.title, a.category_id, a.city_id, a.policy_id,\n" +
-           "a.city_code\n" +
-           "FROM (\n" +
-           "\tSELECT reservation.check_in, reservation.check_out, reservation.product_id, \n" +
-           "\tproduct.id, product.availability, product.description, product.description_title, product.title, product.category_id, product.city_id, product.policy_id,\n" +
-           "\tcity.city_code\n" +
-           "\tFROM reservation\n" +
-           "\tINNER JOIN product ON reservation.product_id = product.id\n" +
-           "\tINNER JOIN city ON product.city_id = city.id\n" +
-           "     ) AS a  \n" +
-           "WHERE  a.check_in NOT BETWEEN (:checkInD) AND (:checkOutD)  AND a.check_out NOT BETWEEN (:checkInD) AND (:checkOutD) AND a.city_code = (:cityCode);", nativeQuery = true)
+   @Query(value = "SELECT product.*, city_code\n" +
+           "FROM product \n" +
+           "INNER JOIN city ON product.city_id = city.id\n" +
+           "WHERE product.id NOT IN \n" +
+           "(\tSELECT reservation.product_id\n" +
+           "    FROM reservation \n" +
+           "    WHERE ((:checkInD) BETWEEN reservation.check_in and reservation.check_out) OR ((:checkOutD)  BETWEEN reservation.check_in and reservation.check_out) or ((:checkInD) > reservation.check_out) and ((:checkOutD) < reservation.check_in)\n" +
+           "    group by product_id)\n" +
+           "HAVING city_code = (:cityCode);", nativeQuery = true)
     List<Product> findByRangeOfDatesAndCity(@Param("checkInD") Date checkInD, @Param("checkOutD") Date checkOut, @Param("cityCode")String cityCode);
 
 
 
     // FIND BY RANGE OF DATES
 
-   @Query(value = "SELECT  a.check_in, a.check_out, a.id, a.availability, a.description, a.description_title, a.title, a.category_id, a.city_id, a.policy_id,\n" +
-           "a.city_code\n" +
-           "FROM (\n" +
-           "\tSELECT reservation.check_in, reservation.check_out, reservation.product_id, \n" +
-           "\tproduct.id, product.availability, product.description, product.description_title, product.title, product.category_id, product.city_id, product.policy_id,\n" +
-           "\tcity.city_code\n" +
-           "\tFROM reservation\n" +
-           "\tINNER JOIN product ON reservation.product_id = product.id\n" +
-           "\tINNER JOIN city ON product.city_id = city.id\n" +
-           "     ) AS a  \n" +
-           "WHERE  a.check_in NOT BETWEEN (:checkInD) AND (:checkOutD)  AND a.check_out NOT BETWEEN (:checkInD) AND (:checkOutD);", nativeQuery = true)
+   @Query(value = "SELECT product.*, city_code\n" +
+           "FROM product \n" +
+           "INNER JOIN city ON product.city_id = city.id\n" +
+           "WHERE product.id NOT IN \n" +
+           "(\tSELECT reservation.product_id\n" +
+           "    FROM reservation \n" +
+           "    WHERE ((:checkInD) BETWEEN reservation.check_in and reservation.check_out) OR ((:checkOutD)  BETWEEN reservation.check_in and reservation.check_out) or ((:checkInD) > reservation.check_out) and ((:checkOutD) < reservation.check_in)\n" +
+           "    group by product_id)",  nativeQuery = true)
     List<Product> findByRangeOfDates(@Param("checkInD") Date checkInD, @Param("checkOutD") Date checkOut);
 
 }
